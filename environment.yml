@@ -1,0 +1,10 @@
+name: pullq
+channels:
+  - defaults
+dependencies:
+  - click
+  - pandas
+  - psycopg2
+  - python-dotenv
+  - sqlalchemy
+prefix: C:\Users\Sonurosu\anaconda3\envs\pullq
