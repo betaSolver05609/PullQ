@@ -18,3 +18,18 @@ def test_connection(host, port, dbName, username, password):
         return False
 
         
+
+def connect_postgres(host, port, dbName, username, password):
+    try:
+        connection = psycopg2.connect(
+            host=host,
+            port=port,
+            dbname = dbName,
+            user=username,
+            password=password,
+            connect_timeout=5
+            )
+        return connection
+    except Exception as e:
+        print(f"Connection to database failed {e}")
+        return None
