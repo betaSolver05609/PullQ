@@ -3,6 +3,7 @@
 import click
 import json
 import os
+from db_connection import test_connection
 
 CONFIG_PATH = os.path.expanduser("~/.pullq/config.json")
 
@@ -32,8 +33,22 @@ def cli():
 @click.option('--username', prompt="Username")
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=False, help="Password for the DB USER")
 def setup(name, host, port, dbname, username, password):
-    click.echo(f"[PullQ] Testing connection to {host}:{port}/{dbname} ...")
+    configs={}
+    configs[name] = {
+        "host": host,
+        "port": port,
+        "dbName": dbname,
+        "username": username,
+        "password": password
+        }
+    save_configs(configs)
     
+    conn_test = test_connection(host, port, dbname, username, password)
+    
+    click.echo(f"[PullQ] Testing connection to {host}:{port}/{dbname} ...")
+    click.echo("Database Connection succeded") if conn_test else click.echo("Database connection failed. Please check the details")
+
+
     
 if __name__ == '__main__':
     cli()
