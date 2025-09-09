@@ -82,7 +82,7 @@ class SchemaGraph:
                 "parent_column": parent_column
                 })
             
-            self.graph = graph
+        self.graph = graph
         cursor.close()
         return graph
         
