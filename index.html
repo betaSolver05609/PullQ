@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PullQ - Rapid Data Reproduction CLI</title>
+<link rel="stylesheet" href="styles.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div class="container header-container">
+    <h1>PullQ</h1>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#options">CLI Options</a>
+      <a href="#usage">Usage</a>
+      <a href="#about">About</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container hero-container">
+    <h2>Reproduce Production Data in Test Environments</h2>
+    <p>PullQ helps developers extract, traverse, and generate database records safely and efficiently for testing and debugging.</p>
+    <a href="#usage" class="btn">See Demo</a>
+  </div>
+</section>
+
+<section id="features" class="features">
+  <div class="container">
+    <h2>Features</h2>
+    <div class="feature-cards">
+      <div class="card">
+        <h3>Interactive CLI</h3>
+        <p>Guided prompts to setup connections, choose existing configs, and extract related data.</p>
+      </div>
+      <div class="card">
+        <h3>Schema Traversal</h3>
+        <p>Automatically traverse parent and child tables via foreign keys up to configurable depth.</p>
+      </div>
+      <div class="card">
+        <h3>Insert Statement Generation</h3>
+        <p>Generate ready-to-use SQL INSERTs for test database seeding, maintaining dependency order.</p>
+      </div>
+      <div class="card">
+        <h3>Connection Management</h3>
+        <p>Save multiple DB connections securely and reuse them easily in workflows.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="options" class="cli-options">
+  <div class="container">
+    <h2>CLI Commands & Options</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Flags</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>setup</td>
+          <td>--name, --host, --port, --dbname, --username, --password</td>
+          <td>Create a new database connection configuration.</td>
+          <td>N/A</td>
+        </tr>
+        <tr>
+          <td>load</td>
+          <td>None</td>
+          <td>Select an existing connection configuration.</td>
+          <td>N/A</td>
+        </tr>
+        <tr>
+          <td>extract</td>
+          <td>--table, --column, --value, --depth, --direction</td>
+          <td>Extract related data and generate INSERT statements.</td>
+          <td>depth=2, direction=both</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="usage" class="usage">
+  <div class="container">
+    <h2>Example Usage</h2>
+    <p>Extract related data for a user and generate SQL:</p>
+    <pre><code id="cli-output">
+$ python cli.py extract
+Root table: users
+Root column: user_id
+Root value: 1
+[PullQ] Loaded config 'production_db'
+-- Generated INSERT statements --
+INSERT INTO users (user_id, name, email, phone, created_at) VALUES (...);
+INSERT INTO orders (...) VALUES (...);
+INSERT INTO order_items (...) VALUES (...);
+INSERT INTO order_items (...) VALUES (...);
+    </code></pre>
+    <button id="copy-btn">Copy Output</button>
+  </div>
+</section>
+
+<section id="about" class="about">
+  <div class="container">
+    <h2>About PullQ</h2>
+    <p>PullQ is a developer-focused CLI tool designed to quickly reproduce database issues in a safe test environment. It traverses relational schema, extracts related records, and generates SQL scripts in the correct order, so you can replicate scenarios without touching production.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 PullQ. Built for developers, with ❤️.</p>
+  </div>
+</footer>
+
+<script src="index.js"></script>
+</body>
+</html>
