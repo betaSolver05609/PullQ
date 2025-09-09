@@ -20,7 +20,7 @@ class SchemaGraph:
         connection = connect_postgres(
             self.configs['host'],
             self.configs['port'],
-            self.configs['dbname'],
+            self.configs['dbName'],
             self.configs['username'],
             self.configs['password']
             )
@@ -83,10 +83,11 @@ class SchemaGraph:
                 })
             
             self.graph = graph
-            cursor.close()
-            return graph
+        cursor.close()
+        return graph
         
     def print_graph(self):
+        print(self.graph)
         for parent, children in self.graph.items():
             print(f"{parent} →")
             for rel in children:

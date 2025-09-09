@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import psycopg2
-
 def test_connection(host, port, dbName, username, password):
     try:
         connection = psycopg2.connect(
@@ -9,7 +8,8 @@ def test_connection(host, port, dbName, username, password):
             dbname=dbName,
             user=username,
             password=password,
-            connect_timeout=5
+            connect_timeout=5,
+            sslmode="require"
             )
         connection.close()
         return True
