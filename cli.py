@@ -3,8 +3,10 @@
 import click
 import json
 import os
-from db_connector import test_connection
+from db_connector import test_connection, get_connection
 from schema_graph import SchemaGraph
+from traversal_engine import TraversalEngine
+from reverse_engineering import generate_insert_statements
 
 CONFIG_PATH = os.path.expanduser("~/.pullq/config.json")
 
@@ -47,12 +49,6 @@ def setup(name, host, port, dbname, username, password):
     save_configs(configs)
 
     conn_test = test_connection(host, port, dbname, username, password)
-
-    config = configs[name]
-    sg = SchemaGraph(config)
-    sg.build()
-    sg.print_graph()
-
     click.echo(f"[PullQ] Testing connection to {host}:{port}/{dbname} ...")
     click.echo("Database Connection succeeded") if conn_test else click.echo("Database connection failed. Please check the details")
 
@@ -77,27 +73,92 @@ def load():
 
     selected_name = names[choice - 1]
     config = configs[selected_name]
-    
-    print(config)
-
-    conn_test = test_connection(config["host"], config["port"], config["dbName"], config["username"], config["password"])
-
-    sg = SchemaGraph(config)
-    sg.build()
-    sg.print_graph()
-
-    click.echo(f"[PullQ] Testing connection to {config['host']}:{config['port']}/{config['dbName']} ...")
-    click.echo("Database Connection succeeded") if conn_test else click.echo("Database connection failed. Please check the details")
+    click.echo(f"[PullQ] Loaded config '{selected_name}'")
+    return config
 
 
 @cli.command()
-def start():
-    """Start PullQ CLI: choose between new setup or loading existing config"""
-    choice = click.prompt("Do you want to use an existing config? (y/n)", type=str)
-    if choice.lower().startswith("y"):
-        cli(["load"])  # calls the load command
+@click.option("--table", prompt="Root table", help="Starting table for extraction")
+@click.option("--column", prompt="Root column", help="Column in root table to filter on")
+@click.option("--value", prompt="Root value", help="Value for the root column")
+@click.option("--depth", default=2, help="Traversal depth (default=2)")
+@click.option("--direction", type=click.Choice(["up", "down", "both"]), default="both", help="Traversal direction")
+def extract(table, column, value, depth, direction):
+    """Interactive flow: choose or setup a DB connection, then extract related data."""
+    click.echo("[PullQ] Starting interactive extraction flow...")
+    configs = load_configs()
+
+    # Determine whether to use new or existing connection
+    if not configs:
+        click.echo("No saved configs found. Let's set up a new connection.")
+        choice = "new"
     else:
-        cli(["setup"])  # calls the setup command
+        choice = click.prompt(
+            "Do you want to (1) setup a new connection or (2) choose existing?",
+            type=click.Choice(["1", "2"]),
+            default="2"
+        )
+
+    # Setup new connection
+    if choice == "1" or choice == "new":
+        name = click.prompt("Connection Name")
+        host = click.prompt("Host")
+        port = click.prompt("Port", default=5432, type=int)
+        dbname = click.prompt("Database Name")
+        username = click.prompt("Username")
+        password = click.prompt("Password", hide_input=True)
+
+        if test_connection(host, port, dbname, username, password):
+            click.echo("✅ Connection succeeded, saving config.")
+            configs[name] = {
+                "host": host,
+                "port": port,
+                "dbname": dbname,
+                "username": username,
+                "password": password
+            }
+            save_configs(configs)
+            db_conf = configs[name]
+        else:
+            click.echo("❌ Connection failed. Exiting.")
+            return
+
+    # Load existing connection
+    else:
+        click.echo("Available saved connections:")
+        names = list(configs.keys())
+        for i, name in enumerate(names, 1):
+            click.echo(f"{i}. {name}")
+
+        selection = click.prompt("Select a connection", type=int)
+        if selection < 1 or selection > len(names):
+            click.echo("Invalid selection. Exiting.")
+            return
+        db_conf = configs[names[selection - 1]]
+        click.echo(f"[PullQ] Loaded config '{names[selection - 1]}'")
+
+    # Use context manager to get connection
+    with get_connection(db_conf) as conn:
+        # Build schema graph
+        sg = SchemaGraph(db_conf)
+        sg.connect()
+        sg.build()
+
+        # Traverse from root record
+        te = TraversalEngine(conn, sg)
+        results = te.traverse(
+            root_table=table,
+            root_column=column,
+            root_value=value,
+            direction=direction,
+            depth=depth
+        )
+
+        # Generate INSERT statements
+        inserts = generate_insert_statements(results, sg)
+        click.echo("\n-- Generated INSERT statements --")
+        for stmt in inserts:
+            click.echo(stmt)
 
 
 if __name__ == '__main__':
